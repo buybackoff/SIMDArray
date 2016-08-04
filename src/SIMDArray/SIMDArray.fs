@@ -417,6 +417,44 @@ let inline map2
     result
     
 
+let inline map2old
+    (f : ^T Vector -> ^U Vector -> ^V Vector) (array1 : ^T[]) (array2 :^U[]) : ^V[] =
+
+    checkNonNull array1
+    checkNonNull array2
+
+    let count = Vector< ^T>.Count    
+    if count <> Vector< ^U>.Count || count <> Vector< ^V>.Count then invalidArg "array" "Inputs and output must all have same Vector width."
+    
+    let len = array1.Length        
+    if len <> array2.Length then invalidArg "array2" "Arrays must have same length"
+
+    let result = Array.zeroCreate len
+    let lenLessCount = len-count
+
+    let mutable i = 0    
+    while i <= lenLessCount do
+        (f (Vector< ^T>(array1,i )) (Vector< ^U>(array2,i))).CopyTo(result,i)   
+        i <- i + count
+    
+    
+    if i < len then 
+        let leftOver = len - i
+        let leftOverArray1 = Array.zeroCreate count
+        let leftOverArray2 = Array.zeroCreate count
+        for j in 0 .. leftOverArray1.Length-1 do
+            if j < leftOver then
+                leftOverArray1.[j] <- array1.[j+i]
+                leftOverArray2.[j] <- array2.[j+i]
+                        
+        let v = f (Vector< ^T>(leftOverArray1,0 )) (Vector< ^U>(leftOverArray2,0))
+        
+        for j in 0 .. leftOver-1 do
+            result.[i] <- v.[j]
+            i <- i + 1
+            
+    result
+
 /// <summary>
 /// Identical to the standard map2 function, but you must provide
 /// A Vector mapping function.

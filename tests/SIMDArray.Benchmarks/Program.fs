@@ -33,8 +33,9 @@ type SIMDBenchmark () =
     let mutable mathnetVector = vector [1.0f]
     let mutable mathnetVector2 = vector [1.0f]
 
-    [<Params (100, 1000,100000,1000000)>] 
-    member val public Length = 0 with get, set
+    //[<Params (100, 1000,100000,1000000)>] 
+    [<Params (1000)>] 
+    member val public Length = 1001 with get, set
 
     [<Setup>]
     member self.SetupData () =        
@@ -47,23 +48,45 @@ type SIMDBenchmark () =
     
     [<Benchmark>]
     member self.SIMDMap2 ()  = Array.SIMD.map2 (fun x y -> x+y) array array2
-
+    member self.SIMDMap2old ()  = Array.SIMD.map2old (fun x y -> x+y) array array2
        
-    [<Benchmark>]
-    member self.MathNETSum ()  =  mathnetVector.Add(mathnetVector2)
+//    [<Benchmark>]
+//    member self.MathNETSum ()  =  mathnetVector.Add(mathnetVector2)
 
 
         
 [<EntryPoint>]
 let main argv =              
-    Control.UseNativeMKL()
-    printf "%A\n" (Control.LinearAlgebraProvider.ToString())
+//    Control.UseNativeMKL()
+//    printf "%A\n" (Control.LinearAlgebraProvider.ToString())
 
-    let switch = 
-        BenchmarkSwitcher [|
-            typeof<SIMDBenchmark>
-        |]
-
-    switch.Run argv |> ignore
+    let sw = System.Diagnostics.Stopwatch()
+    
+    let runner = SIMDBenchmark()
+    runner.SetupData()
+    for r in 0..10 do
+      sw.Restart()
+      let mutable sum = 0.0f
+      for i in 0..10000000 do
+        let res = runner.SIMDMap2()
+        sum <- sum + res.[0]
+      sw.Stop()
+      Console.WriteLine("Elapsed " + sw.ElapsedMilliseconds.ToString())
+      
+      sw.Restart()
+      let mutable sum = 0.0f
+      for i in 0..10000000 do
+        let res = runner.SIMDMap2old()
+        sum <- sum + res.[0]
+      sw.Stop()
+      Console.WriteLine("Elapsed old " + sw.ElapsedMilliseconds.ToString())
+      
+    Console.ReadLine() |> ignore
+//    let switch = 
+//        BenchmarkSwitcher [|
+//            typeof<SIMDBenchmark>
+//        |]
+//
+//    switch.Run argv |> ignore
     0
 
