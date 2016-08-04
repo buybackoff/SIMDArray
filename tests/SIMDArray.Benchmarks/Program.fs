@@ -72,7 +72,7 @@ let main argv =
         sum <- sum + res.[0]
       sw.Stop()
       Console.WriteLine("Elapsed " + sw.ElapsedMilliseconds.ToString())
-      
+      GC.Collect(3, GCCollectionMode.Forced, true)
       sw.Restart()
       let mutable sum = 0.0f
       for i in 0..10000000 do
@@ -80,7 +80,7 @@ let main argv =
         sum <- sum + res.[0]
       sw.Stop()
       Console.WriteLine("Elapsed old " + sw.ElapsedMilliseconds.ToString())
-      
+      GC.Collect(3, GCCollectionMode.Forced, true)
     Console.ReadLine() |> ignore
 //    let switch = 
 //        BenchmarkSwitcher [|
